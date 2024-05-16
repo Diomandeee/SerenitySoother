@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+databases
+asyncpg
+pydantic
+python-dotenv
+qrcode
+numpy
