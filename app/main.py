@@ -1,7 +1,10 @@
+# main.py
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from app.models import Base
+from app.config import settings
 from app.routers import (
     user,
     session,
@@ -20,12 +23,15 @@ from app.routers import (
     recommendation,
     gamification,
     hypnotherapy,
+    chat,
+    auth,
+    interactive,
+    tree,
+    embedding,  # Add the embedding router here
 )
 from contextlib import asynccontextmanager
 
-DATABASE_URL = "sqlite+aiosqlite:///./serenity_soother.db"
-
-engine = create_async_engine(DATABASE_URL, echo=True)
+engine = create_async_engine(settings.DATABASE_URL, echo=True)
 AsyncSessionLocal = async_sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
@@ -43,6 +49,8 @@ app = FastAPI(lifespan=lifespan)
 origins = [
     "http://localhost",
     "http://localhost:8000",
+    "http://127.0.0.1",
+    "http://127.0.0.1:8000",
 ]
 
 app.add_middleware(
@@ -60,23 +68,8 @@ async def read_root():
 
 
 app.include_router(user.router, prefix="/users", tags=["users"])
-app.include_router(session.router, prefix="/sessions", tags=["sessions"])
-app.include_router(script.router, prefix="/scripts", tags=["scripts"])
-app.include_router(scene.router, prefix="/scenes", tags=["scenes"])
-app.include_router(element.router, prefix="/elements", tags=["elements"])
-app.include_router(emotion.router, prefix="/emotions", tags=["emotions"])
-app.include_router(goal.router, prefix="/goals", tags=["goals"])
-app.include_router(progress.router, prefix="/progress", tags=["progress"])
-app.include_router(notification.router, prefix="/notifications", tags=["notifications"])
-app.include_router(memory.router, prefix="/memories", tags=["memories"])
-app.include_router(setting.router, prefix="/settings", tags=["settings"])
-app.include_router(trading_card.router, prefix="/trading_cards", tags=["trading_cards"])
-app.include_router(thought.router, prefix="/thoughts", tags=["thoughts"])
-app.include_router(qr_code.router, prefix="/qr_codes", tags=["qr_codes"])
-app.include_router(thought.router, prefix="/thoughts", tags=["thoughts"])
-app.include_router(recommendation.router, prefix="/recommendations", tags=["recommendations"])
-app.include_router(gamification.router, prefix="/gamification", tags=["gamification"])
-app.include_router(hypnotherapy.router, prefix="/hypnotherapy", tags=["hypnotherapy"])
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(chat.router, prefix="/chat", tags=["chat"])
 
 if __name__ == "__main__":
     import uvicorn

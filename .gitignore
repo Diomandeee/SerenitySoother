@@ -20,6 +20,9 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+config/
+.env
+main.ipynb
 
 # IDEs and editors
 /.idea

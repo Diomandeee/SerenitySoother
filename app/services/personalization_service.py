@@ -1,5 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import User, Script, Scene, TradingCard, Session
+from sqlalchemy.future import select
+from app.helper import log_handler
+from fastapi import HTTPException
+from collections import Counter
 from app.services.utils import (
     get_user,
     get_user_sessions,
@@ -12,13 +16,8 @@ from app.services.utils import (
     recommend_goals,
     recommend_based_on_mood,
 )
-from collections import Counter
 from typing import List
-from sqlalchemy.future import select
-from fastapi import HTTPException
-import logging
 
-logger = logging.getLogger(__name__)
 
 async def personalize_user_experience(user_id: int, db: AsyncSession):
     try:
@@ -31,7 +30,9 @@ async def personalize_user_experience(user_id: int, db: AsyncSession):
 
         recommended_scripts = await recommend_scripts(user, sessions, scripts, db)
         recommended_scenes = await recommend_scenes(user, sessions, scripts, db)
-        recommended_trading_cards = await recommend_trading_cards(user, trading_cards, db)
+        recommended_trading_cards = await recommend_trading_cards(
+            user, trading_cards, db
+        )
         recommended_goals = recommend_goals(goals)
         mood_based_recommendations = await recommend_based_on_mood(emotions, db)
 
@@ -44,15 +45,21 @@ async def personalize_user_experience(user_id: int, db: AsyncSession):
             "mood_based_recommendations": mood_based_recommendations,
         }
     except Exception as e:
-        logger.error(f"Error personalizing user experience for user_id {user_id}: {e}")
-        raise HTTPException(status_code=500, detail="An error occurred while personalizing the user experience.")
+        log_handler(f"Error personalizing user experience for user_id {user_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred while personalizing the user experience.",
+        )
+
 
 async def recommend_scripts(
     user, sessions: List[Session], scripts: List[Script], db: AsyncSession
 ):
     try:
         user_sessions = [session.id for session in sessions]
-        user_scripts = [script for script in scripts if script.session_id in user_sessions]
+        user_scripts = [
+            script for script in scripts if script.session_id in user_sessions
+        ]
         user_ratings = {
             script.id: script.script_rating
             for script in user_scripts
@@ -78,9 +85,9 @@ async def recommend_scripts(
             similarity = calculate_similarity(user_ratings, other_ratings)
             user_similarity[other_user.id] = similarity
 
-        similar_users = sorted(user_similarity.items(), key=lambda x: x[1], reverse=True)[
-            :5
-        ]
+        similar_users = sorted(
+            user_similarity.items(), key=lambda x: x[1], reverse=True
+        )[:5]
 
         recommended_scripts = set()
         for similar_user_id, _ in similar_users:
@@ -94,8 +101,11 @@ async def recommend_scripts(
 
         return list(recommended_scripts)[:3]
     except Exception as e:
-        logger.error(f"Error recommending scripts for user {user.username}: {e}")
-        raise HTTPException(status_code=500, detail="An error occurred while recommending scripts.")
+        log_handler(f"Error recommending scripts for user {user.username}: {e}")
+        raise HTTPException(
+            status_code=500, detail="An error occurred while recommending scripts."
+        )
+
 
 async def recommend_scenes(
     user: User, sessions: List[Session], scripts: List[Script], db: AsyncSession
@@ -122,8 +132,11 @@ async def recommend_scenes(
 
         return [scene for scene in scenes[:3]]
     except Exception as e:
-        logger.error(f"Error recommending scenes for user {user.username}: {e}")
-        raise HTTPException(status_code=500, detail="An error occurred while recommending scenes.")
+        log_handler(f"Error recommending scenes for user {user.username}: {e}")
+        raise HTTPException(
+            status_code=500, detail="An error occurred while recommending scenes."
+        )
+
 
 async def recommend_trading_cards(
     user: User, trading_cards: List[TradingCard], db: AsyncSession
@@ -142,9 +155,9 @@ async def recommend_trading_cards(
         ]
 
         user_similarity = await calculate_user_similarity(user.id, trading_cards, db)
-        similar_users = sorted(user_similarity.items(), key=lambda x: x[1], reverse=True)[
-            :5
-        ]
+        similar_users = sorted(
+            user_similarity.items(), key=lambda x: x[1], reverse=True
+        )[:5]
 
         for similar_user_id, _ in similar_users:
             similar_user_cards = await get_user_trading_cards(similar_user_id, db)
@@ -154,5 +167,8 @@ async def recommend_trading_cards(
 
         return list(set(recommended_cards))[:3]
     except Exception as e:
-        logger.error(f"Error recommending trading cards for user {user.username}: {e}")
-        raise HTTPException(status_code=500, detail="An error occurred while recommending trading cards.")
+        log_handler(f"Error recommending trading cards for user {user.username}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred while recommending trading cards.",
+        )

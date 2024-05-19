@@ -1,12 +1,11 @@
-import qrcode
 from qrcode.image.pil import PilImage
-from io import BytesIO
 from fastapi import HTTPException
-import base64
-from typing import Optional
 from PIL import Image, ImageDraw
-import os
+from typing import Optional
 import logging
+import base64
+import qrcode
+import os
 
 QR_CODES_DIR = "images/qr_codes"
 

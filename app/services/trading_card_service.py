@@ -2,14 +2,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import User, TradingCard
 from app.services import qr_code_service
 from sqlalchemy.future import select
+from app.helper import log_handler
 from fastapi import HTTPException
 from collections import Counter
 from typing import List
-import logging
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 async def create_trading_card(
@@ -30,7 +26,7 @@ async def create_trading_card(
             result = await db.execute(select(User).filter(User.id == user_id))
             user = result.scalars().first()
             if not user:
-                logger.error(f"User with ID {user_id} not found")
+                log_handler(f"User with ID {user_id} not found")
                 raise HTTPException(status_code=400, detail="User not found")
 
             qr_code_url = qr_code_service.generate_qr_code(
@@ -53,10 +49,10 @@ async def create_trading_card(
             db.add(db_trading_card)
         await db.commit()
         await db.refresh(db_trading_card)
-        logger.info(f"Trading card created with ID {db_trading_card.id}")
+        log_handler(f"Trading card created with ID {db_trading_card.id}")
         return db_trading_card
     except Exception as e:
-        logger.error(f"Error creating trading card: {str(e)}")
+        log_handler(f"Error creating trading card: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Error creating trading card: {str(e)}"
         )
@@ -112,7 +108,7 @@ async def update_trading_card(
             await db.refresh(db_trading_card)
             return db_trading_card
     except Exception as e:
-        logger.error(f"Error updating trading card: {str(e)}")
+        log_handler(f"Error updating trading card: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Error updating trading card: {str(e)}"
         )

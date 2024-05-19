@@ -1,5 +1,6 @@
-from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import User, Script, Scene, TradingCard, Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 from app.services.utils import (
     get_user,
     get_user_sessions,
@@ -10,7 +11,6 @@ from app.services.utils import (
 )
 from collections import Counter
 from typing import List
-from sqlalchemy.future import select
 
 
 async def recommend_for_user(user_id: int, db: AsyncSession):

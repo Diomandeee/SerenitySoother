@@ -1,12 +1,13 @@
-from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import User, Goal, Achievement, Reward
 from app.services.utils import get_user, get_user_goals
-from fastapi import HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from fastapi import HTTPException
 from typing import List
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 async def track_achievements(user_id: int, db: AsyncSession):
     try:
@@ -15,20 +16,28 @@ async def track_achievements(user_id: int, db: AsyncSession):
         achievements = await evaluate_achievements(user, goals, db)
         return {
             "message": f"Achievements tracked for {user.username}",
-            "achievements": achievements
+            "achievements": achievements,
         }
     except Exception as e:
         logger.error(f"Error tracking achievements for user {user_id}: {e}")
-        raise HTTPException(status_code=500, detail="An error occurred while tracking achievements.")
+        raise HTTPException(
+            status_code=500, detail="An error occurred while tracking achievements."
+        )
+
 
 async def evaluate_rewards(user: User, db: AsyncSession):
     try:
-        result = await db.execute(select(Reward).filter(Reward.user_id == user.id, Reward.redeemed == False))
+        result = await db.execute(
+            select(Reward).filter(Reward.user_id == user.id, Reward.redeemed == False)
+        )
         return result.scalars().all()
     except Exception as e:
         logger.error(f"Error evaluating rewards for user {user.id}: {e}")
-        raise HTTPException(status_code=500, detail="An error occurred while evaluating rewards.")
-    
+        raise HTTPException(
+            status_code=500, detail="An error occurred while evaluating rewards."
+        )
+
+
 async def evaluate_achievements(user: User, goals: List[Goal], db: AsyncSession):
     try:
         achieved_goals = [goal for goal in goals if goal.goal_status == "achieved"]
@@ -49,11 +58,18 @@ async def evaluate_achievements(user: User, goals: List[Goal], db: AsyncSession)
         return achievements
     except Exception as e:
         logger.error(f"Error evaluating achievements for user {user.id}: {e}")
-        raise HTTPException(status_code=500, detail="An error occurred while evaluating achievements.")
+        raise HTTPException(
+            status_code=500, detail="An error occurred while evaluating achievements."
+        )
+
 
 async def award_achievement(user: User, title: str, db: AsyncSession):
     try:
-        result = await db.execute(select(Achievement).filter(Achievement.user_id == user.id, Achievement.title == title))
+        result = await db.execute(
+            select(Achievement).filter(
+                Achievement.user_id == user.id, Achievement.title == title
+            )
+        )
         existing_achievement = result.scalars().first()
         if existing_achievement:
             return existing_achievement
@@ -65,7 +81,10 @@ async def award_achievement(user: User, title: str, db: AsyncSession):
         return new_achievement
     except Exception as e:
         logger.error(f"Error awarding achievement {title} to user {user.id}: {e}")
-        raise HTTPException(status_code=500, detail="An error occurred while awarding achievement.")
+        raise HTTPException(
+            status_code=500, detail="An error occurred while awarding achievement."
+        )
+
 
 async def award_reward(user: User, title: str, description: str, db: AsyncSession):
     try:
@@ -76,7 +95,10 @@ async def award_reward(user: User, title: str, description: str, db: AsyncSessio
         return new_reward
     except Exception as e:
         logger.error(f"Error awarding reward {title} to user {user.id}: {e}")
-        raise HTTPException(status_code=500, detail="An error occurred while awarding reward.")
+        raise HTTPException(
+            status_code=500, detail="An error occurred while awarding reward."
+        )
+
 
 async def redeem_reward(user: User, reward_id: int, db: AsyncSession):
     try:
@@ -86,7 +108,10 @@ async def redeem_reward(user: User, reward_id: int, db: AsyncSession):
             raise HTTPException(status_code=404, detail="Reward not found")
 
         if reward.user_id != user.id:
-            raise HTTPException(status_code=403, detail="You do not have permission to redeem this reward")
+            raise HTTPException(
+                status_code=403,
+                detail="You do not have permission to redeem this reward",
+            )
 
         reward.redeemed = True
         await db.commit()
@@ -94,27 +119,36 @@ async def redeem_reward(user: User, reward_id: int, db: AsyncSession):
         return reward
     except Exception as e:
         logger.error(f"Error redeeming reward {reward_id} for user {user.id}: {e}")
-        raise HTTPException(status_code=500, detail="An error occurred while redeeming reward.")
-    
+        raise HTTPException(
+            status_code=500, detail="An error occurred while redeeming reward."
+        )
+
+
 async def track_rewards(user_id: int, db: AsyncSession):
     try:
         user = await get_user(user_id, db)
         rewards = await evaluate_rewards(user, db)
-        return {
-            "message": f"Rewards tracked for {user.username}",
-            "rewards": rewards
-        }
+        return {"message": f"Rewards tracked for {user.username}", "rewards": rewards}
     except Exception as e:
         logger.error(f"Error tracking rewards for user {user_id}: {e}")
-        raise HTTPException(status_code=500, detail="An error occurred while tracking rewards.")
-    
+        raise HTTPException(
+            status_code=500, detail="An error occurred while tracking rewards."
+        )
+
+
 async def get_user_achievements(user_id: int, db: AsyncSession):
     try:
-        result = await db.execute(select(Achievement).filter(Achievement.user_id == user_id))
+        result = await db.execute(
+            select(Achievement).filter(Achievement.user_id == user_id)
+        )
         return result.scalars().all()
     except Exception as e:
         logger.error(f"Error getting achievements for user {user_id}: {e}")
-        raise HTTPException(status_code=500, detail="An error occurred while fetching user achievements.")
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred while fetching user achievements.",
+        )
+
 
 async def get_user_rewards(user_id: int, db: AsyncSession):
     try:
@@ -122,4 +156,6 @@ async def get_user_rewards(user_id: int, db: AsyncSession):
         return result.scalars().all()
     except Exception as e:
         logger.error(f"Error getting rewards for user {user_id}: {e}")
-        raise HTTPException(status_code=500, detail="An error occurred while fetching user rewards.")
+        raise HTTPException(
+            status_code=500, detail="An error occurred while fetching user rewards."
+        )

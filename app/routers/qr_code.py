@@ -37,5 +37,3 @@ async def create_qr_code(request: QRCodeRequest):
         return {"qr_code_url": qr_code_url}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-

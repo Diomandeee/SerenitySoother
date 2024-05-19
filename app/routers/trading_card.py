@@ -1,10 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
-
 from app.schemas import TradingCard, TradingCardCreate, TradingCardUpdate, User
-from app.dependencies import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.services import trading_card_service
+from fastapi import APIRouter, Depends
+from app.dependencies import get_db
+from typing import List
 import logging
 
 # Configure logging
